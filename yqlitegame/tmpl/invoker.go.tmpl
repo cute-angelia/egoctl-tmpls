@@ -1,0 +1,36 @@
+// @EgoctlOverwrite NO
+// @EgoctlGenerateTime {{generateTime}}
+package invoker
+
+import (
+	"github.com/cute-angelia/go-utils/components/ibunt"
+	"github.com/cute-angelia/go-utils/components/igorm"
+	"github.com/cute-angelia/go-utils/components/loggerV3"
+	"github.com/rs/zerolog"
+	"github.com/spf13/viper"
+)
+
+var (
+	Logger    *zerolog.Logger
+	Bunter    *ibunt.Component
+	GormMysql *igorm.Component
+)
+
+func InitCommon() error {
+
+	// 日志
+	Logger = loggerV3.Load("components.loggerV3").NewLogger()
+
+	// bunt
+	ibunt.Load("components.bunt").Init()
+
+	// db
+	igorm.New(
+		igorm.WithDbName("company_ues"),
+		igorm.WithDsn(viper.GetString("db.company_ues")),
+		igorm.WithMaxIdleConns(10),
+		igorm.WithMaxOpenConnss(50),
+	).MustInitMysql()
+
+	return nil
+}

@@ -1,0 +1,34 @@
+// @EgoctlOverwrite NO
+// @EgoctlGenerateTime {{generateTime}}
+package main
+
+import (
+	///"embed"
+	"github.com/cute-angelia/go-utils/utils/conf"
+	"go-api-chess/config"
+	"go-api-chess/project/demo/pkg/invoker"
+	"go-api-chess/project/demo/pkg/router"
+	"log"
+)
+
+///go:embed vue/dist/*
+var assets embed.FS
+
+const PROJECT_NAME = "yq-demo"
+const PORT_SITE = ":9305"
+
+func main() {
+	// config
+	config.InitConfig()
+	if err := conf.MergeConfigWithPath("./"); err != nil {
+		log.Println(err)
+	}
+
+	// invoker
+	invoker.InitCommon()
+	// go-chi
+	invoker.InitGoChi()
+	/// invoker.InitAssets(assets)
+
+	router.ServeHTTP(PROJECT_NAME, PORT_SITE)
+}
