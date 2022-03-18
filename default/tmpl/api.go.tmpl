@@ -7,7 +7,8 @@ import (
 	"{{packagePath}}/pkg/invoker"
 	"{{packagePath}}/pkg/model/dto"
 	"github.com/spf13/cast"
-    "{{packagePath}}/pkg/router/core"
+  "{{packagePath}}/pkg/router/core"
+  "github.com/cute-angelia/go-utils/components/igorm"
 )
 
 // {{modelName|upperFirst}}Info 查询单条记录
@@ -29,7 +30,7 @@ func {{modelName|upperFirst}}List(c *core.Context) {
 		return
 	}
 
-	query := mysql.Conds{}
+	query := igorm.Conds{}
     {% for value in modelSchemas %}if v := c.Query("{{value.FieldName|snakeString|lowerFirst}}"); v != "" {
         query["{{value.FieldName|snakeString|lowerFirst}}"] = v
     }
