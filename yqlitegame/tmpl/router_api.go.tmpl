@@ -3,15 +3,22 @@
 package router
 
 import (
+	"github.com/go-chi/chi/v5"
 	"{{packagePath}}/pkg/router/api"
-    "github.com/gin-gonic/gin"
-    "{{packagePath}}/pkg/router/core"
 )
 
-func Init{{modelName|upperFirst}}(r gin.IRoutes) {
-    r.GET("{{apiPrefix}}/{{modelName}}s/:{{modelSchemas|fieldsGetPrimaryKey|lowerFirst}}", core.Handle(api.{{modelName|upperFirst}}Info))
-    r.GET("{{apiPrefix}}/{{modelName}}s", core.Handle(api.{{modelName|upperFirst}}List))
-    r.POST("{{apiPrefix}}/{{modelName}}s", core.Handle(api.{{modelName|upperFirst}}Create))
-    r.PUT("{{apiPrefix}}/{{modelName}}s/:{{modelSchemas|fieldsGetPrimaryKey|lowerFirst}}", core.Handle(api.{{modelName|upperFirst}}Update))
-    r.DELETE("{{apiPrefix}}/{{modelName}}s/:{{modelSchemas|fieldsGetPrimaryKey|lowerFirst}}", core.Handle(api.{{modelName|upperFirst}}Delete))
+func Init{{modelName|upperFirst}}(r *chi.Mux) {
+	r.Mount("{{apiPrefix}}", {{modelName}}Router())
+}
+
+func {{modelName}}Router() chi.Router {
+	r := chi.NewRouter()
+	// 中间件
+	// r.Use(AdminOnly)
+	r.Post("/{{modelName}}/info", api.{{modelName|upperFirst}}Info)
+	r.Post("/{{modelName}}/delete", api.{{modelName|upperFirst}}Delete)
+	r.Post("/{{modelName}}/listByPage", api.{{modelName|upperFirst}}List)
+	r.Post("/{{modelName}}/createOrUpdate", api.{{modelName|upperFirst}}CreateOrUpdate)
+
+	return r
 }

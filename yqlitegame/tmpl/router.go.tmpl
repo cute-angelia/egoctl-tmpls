@@ -3,14 +3,21 @@
 package router
 
 import (
-	"github.com/gotomicro/ego/server/egin"
 	"{{packagePath}}/pkg/invoker"
+	"log"
+	"net/http"
 )
 
-func ServeHTTP() *egin.Component {
-	r := invoker.Gin
-    {% for value in modelNames %}
-    Init{{value}}(r)
-    {% endfor %}
-	return r
+func ServeHTTP(project string, port string) {
+	r := invoker.Chier
+
+	// user route
+  {% for value in modelNames %}
+  Init{{value}}(r)
+  {% endfor %}
+
+	log.Println(project + "启动成功~ " + port)
+	if err := http.ListenAndServe(port, invoker.Chier); err != nil {
+		log.Println("启动错误：", err)
+	}
 }

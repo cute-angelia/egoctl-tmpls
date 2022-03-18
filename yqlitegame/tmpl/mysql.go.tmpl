@@ -9,11 +9,11 @@ import (
 	{% for value in packageImports %}"{{value}}"{% endfor %}
 )
 
-const userDbName = "company_ues"
+const {{modelName}}DbName = "company_ues"
 
 type {{modelName|upperFirst}} struct {
 	{% for value in modelSchemas %}
-	{{value.FieldName}} {{value.FieldType}} `gorm:"{{value|fieldGetTag:"gorm"}}"` // {{value.FieldComment}}
+	{{value.FieldName|camelString}} {{value.FieldType}} `gorm:"{{value|fieldGetTag:"gorm"}}"` // {{value.FieldComment}}
 	{% endfor %}
 }
 
@@ -26,7 +26,7 @@ func (t {{modelName|upperFirst}}) TableName() string {
 
 // {{modelName|upperFirst}}Create 创建一条记录
 func {{modelName|upperFirst}}Create(data *{{modelName|upperFirst}}) (err error) {
-	db, _ := igorm.GetGormMysql(userDbName)
+	db, _ := igorm.GetGormMysql({{modelName}}DbName)
 	if err = db.Create(data).Error; err != nil {
 		invoker.Logger.Error().Str("create error", "{{modelName|snakeString}}").Err(err)
 		return
@@ -35,8 +35,8 @@ func {{modelName|upperFirst}}Create(data *{{modelName|upperFirst}}) (err error) 
 }
 
 // {{modelName|upperFirst}}Update 根据主键更新一条记录
-func {{modelName|upperFirst}}Update( paramId int, ups Ups) (err error) {
-	db, _ := igorm.GetGormMysql(userDbName)
+func {{modelName|upperFirst}}Update( paramId int32, ups igorm.Ups) (err error) {
+	db, _ := igorm.GetGormMysql({{modelName}}DbName)
 	var sql = "`{{modelSchemas|fieldsGetPrimaryKey|snakeString}}`=?"
 	var binds = []interface{}{paramId}
 	{% if fieldUtimeExist %} ups["utime"] = time.Now().Unix(){% endif %}
@@ -48,9 +48,9 @@ func {{modelName|upperFirst}}Update( paramId int, ups Ups) (err error) {
 }
 
 // {{modelName|upperFirst}}UpdateX Update的扩展方法，根据Cond更新一条或多条记录
-func {{modelName|upperFirst}}UpdateX( conds Conds, ups Ups) (err error) {
-	db, _ := igorm.GetGormMysql(userDbName)
-	sql, binds := BuildQuery(conds)
+func {{modelName|upperFirst}}UpdateX( conds igorm.Conds, ups igorm.Ups) (err error) {
+	db, _ := igorm.GetGormMysql({{modelName}}DbName)
+	sql, binds := igorm.BuildQuery(conds)
 	if err = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...).Updates(ups).Error; err != nil {
 		invoker.Logger.Error().Str("updateX error", "{{modelName|snakeString}}").Err(err)
 		return
@@ -59,8 +59,8 @@ func {{modelName|upperFirst}}UpdateX( conds Conds, ups Ups) (err error) {
 }
 
 // {{modelName|upperFirst}}Delete 根据主键删除一条记录。如果有delete_time则软删除，否则硬删除。
-func {{modelName|upperFirst}}Delete( paramId int) (err error) {
-	db, _ := igorm.GetGormMysql(userDbName)
+func {{modelName|upperFirst}}Delete( paramId int32) (err error) {
+	db, _ := igorm.GetGormMysql({{modelName}}DbName)
 
 	var sql = "`{{modelSchemas|fieldsGetPrimaryKey|snakeString}}`=?"
 	var binds = []interface{}{paramId}
@@ -82,10 +82,10 @@ func {{modelName|upperFirst}}Delete( paramId int) (err error) {
 }
 
 // {{modelName|upperFirst}}DeleteX Delete的扩展方法，根据Cond删除一条或多条记录。如果有delete_time则软删除，否则硬删除。
-func {{modelName|upperFirst}}DeleteX( conds Conds) (err error) {
-	db, _ := igorm.GetGormMysql(userDbName)
+func {{modelName|upperFirst}}DeleteX( conds igorm.Conds) (err error) {
+	db, _ := igorm.GetGormMysql({{modelName}}DbName)
 
-	sql, binds := BuildQuery(conds)
+	sql, binds := igorm.BuildQuery(conds)
   {% if fieldDtimeExist %}
     if err = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...).Updates(map[string]interface{}{
         "dtime":time.Now().Unix(),
@@ -103,8 +103,8 @@ func {{modelName|upperFirst}}DeleteX( conds Conds) (err error) {
 }
 
 // {{modelName|upperFirst}}Info 根据PRI查询单条记录
-func {{modelName|upperFirst}}Info( paramId int) (resp {{modelName|upperFirst}}, err error) {
-  db, _ := igorm.GetGormMysql(userDbName)
+func {{modelName|upperFirst}}Info( paramId int32) (resp {{modelName|upperFirst}}, err error) {
+  db, _ := igorm.GetGormMysql({{modelName}}DbName)
 	var sql = "`{{modelSchemas|fieldsGetPrimaryKey|snakeString}}`= ?"
 	var binds = []interface{}{paramId}
 
@@ -116,9 +116,9 @@ func {{modelName|upperFirst}}Info( paramId int) (resp {{modelName|upperFirst}}, 
 }
 
 // InfoX Info的扩展方法，根据Cond查询单条记录
-func {{modelName|upperFirst}}InfoX( conds Conds) (resp {{modelName|upperFirst}}, err error) {
-	db, _ := igorm.GetGormMysql(userDbName)
-	sql, binds := BuildQuery(conds)
+func {{modelName|upperFirst}}InfoX( conds igorm.Conds) (resp {{modelName|upperFirst}}, err error) {
+	db, _ := igorm.GetGormMysql({{modelName}}DbName)
+	sql, binds := igorm.BuildQuery(conds)
 
 	if err = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...).First(&resp).Error; err != nil {
 		invoker.Logger.Error().Str("InfoX error", "{{modelName|snakeString}}").Err(err)
@@ -128,15 +128,15 @@ func {{modelName|upperFirst}}InfoX( conds Conds) (resp {{modelName|upperFirst}},
 }
 
 // {{modelName|upperFirst}}List 查询list，extra[0]为sorts
-func {{modelName|upperFirst}}List(conds Conds, extra ...string) (resp []*{{modelName|upperFirst}}, err error) {
-	db, _ := igorm.GetGormMysql(userDbName)
+func {{modelName|upperFirst}}List(conds igorm.Conds, extra ...string) (resp []*{{modelName|upperFirst}}, err error) {
+	db, _ := igorm.GetGormMysql({{modelName}}DbName)
   {% if fieldDtimeExist %}conds["dtime"] = 0{% endif %}
-	sql, binds := BuildQuery(conds)
+	sql, binds := igorm.BuildQuery(conds)
 	sorts := ""
 	if len(extra) >= 1 {
 		sorts = extra[0]
 	}
-	if err = invoker.Db.Model({{modelName|upperFirst}}{}).Where(sql, binds...).Order(sorts).Find(&resp).Error; err != nil {
+	if err = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...).Order(sorts).Find(&resp).Error; err != nil {
 		invoker.Logger.Error().Str("List error", "{{modelName|snakeString}}").Err(err)
 		return
 	}
@@ -144,13 +144,13 @@ func {{modelName|upperFirst}}List(conds Conds, extra ...string) (resp []*{{model
 }
 
 // {{modelName|upperFirst}}ListMap 查询map，map遍历的时候是无序的，所以指定sorts参数没有意义
-func {{modelName|upperFirst}}ListMap(conds Conds) (resp map[int]*{{modelName|upperFirst}}, err error) {
-	db, _ := igorm.GetGormMysql(userDbName)
+func {{modelName|upperFirst}}ListMap(conds igorm.Conds) (resp map[int32]*{{modelName|upperFirst}}, err error) {
+	db, _ := igorm.GetGormMysql({{modelName}}DbName)
   {% if fieldDtimeExist %}conds["dtime"] = 0{% endif %}
-	sql, binds := BuildQuery(conds)
+	sql, binds := igorm.BuildQuery(conds)
 	mysqlSlice := make([]*{{modelName|upperFirst}}, 0)
-	resp = make(map[int]*{{modelName|upperFirst}}, 0)
-	if err = invoker.Db.Model({{modelName|upperFirst}}{}).Where(sql, binds...).Find(&mysqlSlice).Error; err != nil {
+	resp = make(map[int32]*{{modelName|upperFirst}}, 0)
+	if err = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...).Find(&mysqlSlice).Error; err != nil {
 		invoker.Logger.Error().Str("ListMap error", "{{modelName|snakeString}}").Err(err)
 		return
 	}
@@ -161,8 +161,8 @@ func {{modelName|upperFirst}}ListMap(conds Conds) (resp map[int]*{{modelName|upp
 }
 
 // {{modelName|upperFirst}}ListPage 根据分页条件查询list
-func {{modelName|upperFirst}}ListPage( conds Conds, reqList *core.Pagination) (total int64, respList {{modelName|upperFirst}}s) {
-	db, _ := igorm.GetGormMysql(userDbName)
+func {{modelName|upperFirst}}ListPage( conds igorm.Conds, reqList *api.Pagination) (total int64, respList {{modelName|upperFirst}}s) {
+	db, _ := igorm.GetGormMysql({{modelName}}DbName)
   respList = make({{modelName|upperFirst}}s,0)
   {% if fieldDtimeExist %}conds["dtime"] = 0{% endif %}
 	if reqList.PageSize == 0 {
@@ -171,9 +171,9 @@ func {{modelName|upperFirst}}ListPage( conds Conds, reqList *core.Pagination) (t
 	if reqList.Current == 0 {
 		reqList.Current = 1
 	}
-	sql, binds := BuildQuery(conds)
+	sql, binds := igorm.BuildQuery(conds)
 
-	db := invoker.Db.Model({{modelName|upperFirst}}{}).Where(sql, binds...)
+	db = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...)
 	db.Count(&total)
 	db.Offset((reqList.Current - 1) * reqList.PageSize).Limit(reqList.PageSize).Find(&respList)
 	return

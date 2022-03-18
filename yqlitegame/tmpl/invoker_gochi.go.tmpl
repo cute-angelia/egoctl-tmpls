@@ -20,7 +20,7 @@ import (
 
 var ErrDir = errors.New("path is dir")
 
-func InitGoChi(projectName string, port string, assets embed.FS) *chi.Mux {
+func InitGoChi() *chi.Mux {
 	// router
 	r := chi.NewRouter()
 	r.Use(chiMiddleware.RequestID)
@@ -54,7 +54,13 @@ func InitGoChi(projectName string, port string, assets embed.FS) *chi.Mux {
 		// r.Mount("/list", controller.List{}.Routes())
 	})
 
-	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+	// 赋值
+	Chier = r
+	return r
+}
+
+func InitAssets(assets embed.FS) {
+	Chier.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		err := tryRead(assets, "vue/dist", r.URL.Path, w)
 		if err == nil {
 			return
@@ -64,12 +70,6 @@ func InitGoChi(projectName string, port string, assets embed.FS) *chi.Mux {
 			log.Println(err)
 		}
 	})
-
-	log.Println(projectName + "启动成功~ " + port)
-	if err := http.ListenAndServe(port, r); err != nil {
-		log.Println("启动错误：", err)
-	}
-	return r
 }
 
 func tryRead(fs embed.FS, prefix, requestedPath string, w http.ResponseWriter) error {
@@ -90,4 +90,3 @@ func tryRead(fs embed.FS, prefix, requestedPath string, w http.ResponseWriter) e
 	_, err = io.Copy(w, f)
 	return err
 }
-

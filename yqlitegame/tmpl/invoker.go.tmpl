@@ -6,18 +6,17 @@ import (
 	"github.com/cute-angelia/go-utils/components/ibunt"
 	"github.com/cute-angelia/go-utils/components/igorm"
 	"github.com/cute-angelia/go-utils/components/loggerV3"
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 )
 
 var (
-	Logger    *zerolog.Logger
-	Bunter    *ibunt.Component
-	GormMysql *igorm.Component
+	Logger *zerolog.Logger
+	Chier  *chi.Mux
 )
 
 func InitCommon() error {
-
 	// 日志
 	Logger = loggerV3.Load("components.loggerV3").NewLogger()
 
@@ -28,9 +27,9 @@ func InitCommon() error {
 	igorm.New(
 		igorm.WithDbName("company_ues"),
 		igorm.WithDsn(viper.GetString("db.company_ues")),
-		igorm.WithMaxIdleConns(10),
-		igorm.WithMaxOpenConnss(50),
+		igorm.WithMaxIdleConns(1),
+		igorm.WithMaxOpenConnss(2),
+		igorm.WithLoggerWriter(Logger),
 	).MustInitMysql()
-
 	return nil
 }
