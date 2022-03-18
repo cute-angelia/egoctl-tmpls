@@ -1,0 +1,141 @@
+// @EgoctlOverwrite YES
+// @EgoctlGenerateTime {{generateTime}}
+package {{packageName}}
+
+import (
+	"{{packagePath}}/pkg/model/mysql"
+	"github.com/cute-angelia/go-utils/utils/http/api"
+	"github.com/cute-angelia/go-utils/utils/http/validation"
+  "github.com/cute-angelia/go-utils/components/igorm"
+	"net/http"
+)
+
+// {{modelName|upperFirst}}Info 查询单条记录
+func {{modelName|upperFirst}}Info(w http.ResponseWriter, r *http.Request) {
+	// 校验参数
+	valid := validation.Validation{}
+
+	u := struct {
+		Id int32 `valid:"Required;"`
+	}{
+		Id: api.PostInt32(r, "{{modelSchemas|fieldsGetPrimaryKey|lowerFirst}}"),
+	}
+	if err := valid.Submit(u); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+		return
+	}
+	info, _ := mysql.{{modelName|upperFirst}}Info(u.Id)
+	api.Success(w, r, info, "获取成功！")
+	return
+}
+
+// {{modelName|upperFirst}}List 查询多条带分页记录
+func {{modelName|upperFirst}}List(w http.ResponseWriter, r *http.Request) {
+	// 校验参数
+	valid := validation.Validation{}
+
+	u := struct {
+		Current  int `json:"current"`
+		PageSize int `json:"pageSize"`
+		Id       int32
+	}{
+		Current:  api.PostInt(r, "current"),
+		PageSize: api.PostInt(r, "pageSize"),
+		Id:       api.PostInt32(r, "id"),
+	}
+	if err := valid.Submit(u); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+		return
+	}
+
+	if u.PageSize <= 0 {
+		u.PageSize = 10
+	}
+
+	req := &api.Pagination{
+		Current:  u.Current,
+		PageSize: u.PageSize,
+	}
+
+	query := igorm.Conds{}
+    {% for value in modelSchemas %}if v := api.Post(r,"{{value.FieldName|snakeString|lowerFirst}}"); v != "" {
+        query["{{value.FieldName|snakeString|lowerFirst}}"] = v
+    }
+    {% endfor %}
+
+	total, list := mysql.{{modelName|upperFirst}}ListPage(query, req)
+	api.SuccessWithPage(w, r, list, "success", api.Pagination{
+		Current:  u.Current,
+		PageSize: u.PageSize,
+		Total:    total,
+	})
+	return
+}
+
+// {{modelName|upperFirst}}CreateOrUpdate 创建记录
+func {{modelName|upperFirst}}CreateOrUpdate(w http.ResponseWriter, r *http.Request) {
+	// 校验参数
+	valid := validation.Validation{}
+
+	u := struct {
+		Id       int32   
+	}{
+		Id:       api.PostInt32(r, "id"),
+	}
+	if err := valid.Submit(u); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+		return
+	}
+
+	if u.Id > 0 {
+		if user, _ := mysql.{{modelName|upperFirst}}Info(u.Id); user.Id > 0 {
+			// 更新
+			if err := mysql.{{modelName|upperFirst}}Update(u.Id, igorm.Ups{
+						{% for value in modelSchemas %}{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|camelString}}"),
+						{% endif %}{% endfor %}
+			}); err != nil {
+				api.Error(w, r, nil, "保存错误"+ err.Error(), -1)
+				return
+			} else {
+				userResp, _ := mysql.{{modelName|upperFirst}}Info(u.Id)
+				api.Success(w, r, userResp, "success")
+				return
+			}
+		} else {
+			api.Error(w, r, nil, "数据不存在", -1)
+			return
+		}
+	} else {
+		user := mysql.{{modelName|upperFirst}}{
+		 {% for value in modelSchemas %}
+      {{value.FieldName|camelString}}:api.Post(r, "{{value.FieldName|camelString}}"),
+      {% endfor %}
+		}
+		mysql.{{modelName|upperFirst}}Create(&user)
+		api.Success(w, r, user, "success")
+		return
+	}
+}
+
+// {{modelName|upperFirst}}Delete 删除指定记录
+func {{modelName|upperFirst}}Delete(w http.ResponseWriter, r *http.Request) {
+		// 校验参数
+	valid := validation.Validation{}
+
+	u := struct {
+		Id int32 `valid:"Required;"`
+	}{
+		Id: api.PostInt32(r, "{{modelSchemas|fieldsGetPrimaryKey|lowerFirst}}"),
+	}
+	if err := valid.Submit(u); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+		return
+	}
+	if err := mysql.{{modelName|upperFirst}}Delete(u.Id); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+	} else {
+		api.Success(w, r, nil, "获取成功！")
+	}
+	return
+}
+

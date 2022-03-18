@@ -1,0 +1,23 @@
+// @EgoctlOverwrite YES
+// @EgoctlGenerateTime {{generateTime}}
+package router
+
+import (
+	"{{packagePath}}/pkg/invoker"
+	"log"
+	"net/http"
+)
+
+func ServeHTTP(project string, port string) {
+	r := invoker.Chier
+
+	// user route
+  {% for value in modelNames %}
+  Init{{value}}(r)
+  {% endfor %}
+
+	log.Println(project + "启动成功~ " + port)
+	if err := http.ListenAndServe(port, invoker.Chier); err != nil {
+		log.Println("启动错误：", err)
+	}
+}

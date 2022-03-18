@@ -1,0 +1,92 @@
+// @EgoctlOverwrite NO
+// @EgoctlGenerateTime {{generateTime}}
+package invoker
+
+import (
+	"embed"
+	"errors"
+	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"go-api-chess/pkg/middleware"
+	"io"
+	"log"
+	"mime"
+	"net/http"
+	"path"
+	"path/filepath"
+	"time"
+)
+
+var ErrDir = errors.New("path is dir")
+
+func InitGoChi() *chi.Mux {
+	// router
+	r := chi.NewRouter()
+	r.Use(chiMiddleware.RequestID)
+	r.Use(chiMiddleware.Recoverer)
+	r.Use(chiMiddleware.RealIP)
+	r.Use(chiMiddleware.Logger)
+	r.Use(chiMiddleware.Timeout(30 * time.Second))
+	r.Use(chiMiddleware.ThrottleBacklog(20, 500, time.Second))
+
+	// Basic CORS
+	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
+	r.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+
+	// 中间件
+	r.Route("/api", func(r chi.Router) {
+		// 接入 sign && jwt 校验
+		r.Use(
+			middleware.SignPass([]string{}, "e2f082d71b5fb9856dbdcddc7fae07b3"),
+			middleware.Jwt([]string{}, "d923lxll32920392093232323"),
+		)
+
+		// r.Mount("/list", controller.List{}.Routes())
+	})
+
+	// 赋值
+	Chier = r
+	return r
+}
+
+func InitAssets(assets embed.FS) {
+	Chier.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		err := tryRead(assets, "vue/dist", r.URL.Path, w)
+		if err == nil {
+			return
+		}
+		err = tryRead(assets, "vue/dist", "index.html", w)
+		if err != nil {
+			log.Println(err)
+		}
+	})
+}
+
+func tryRead(fs embed.FS, prefix, requestedPath string, w http.ResponseWriter) error {
+	f, err := fs.Open(path.Join(prefix, requestedPath))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// Goのfs.Openはディレクトリを読みこもとうしてもエラーにはならないがここでは邪魔なのでエラー扱いにする
+	stat, _ := f.Stat()
+	if stat.IsDir() {
+		return ErrDir
+	}
+	contentType := mime.TypeByExtension(filepath.Ext(requestedPath))
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Cache-Control", "max-age=864000")
+	_, err = io.Copy(w, f)
+	return err
+}
