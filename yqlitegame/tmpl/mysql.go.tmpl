@@ -13,7 +13,7 @@ const {{modelName}}DbName = "company_ues"
 
 type {{modelName|upperFirst}} struct {
 	{% for value in modelSchemas %}
-	{{value.FieldName|camelString}} {{value.FieldType}} `gorm:"{{value|fieldGetTag:"gorm"}}"` // {{value.FieldComment}}
+	{{value.FieldName|camelString}} {{value.FieldType}} `gorm:"{{value|fieldGetTag:"gorm"}}" json:"{{value|fieldGetTag:"json"}}"` // {{value.FieldComment}}
 	{% endfor %}
 }
 
