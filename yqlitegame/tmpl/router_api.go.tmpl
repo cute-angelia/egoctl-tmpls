@@ -7,18 +7,19 @@ import (
 	"{{packagePath}}/pkg/router/api"
 )
 
+// {{apiPrefix}}
 func Init{{modelName|upperFirst}}(r *chi.Mux) {
-	r.Mount("{{apiPrefix}}", {{modelName}}Router())
+	r.Mount("/{{modelName}}", {{modelName}}Router())
 }
 
 func {{modelName}}Router() chi.Router {
 	r := chi.NewRouter()
 	// 中间件
 	// r.Use(AdminOnly)
-	r.Post("/{{modelName}}/info", api.{{modelName|upperFirst}}Info)
-	r.Post("/{{modelName}}/delete", api.{{modelName|upperFirst}}Delete)
-	r.Post("/{{modelName}}/listByPage", api.{{modelName|upperFirst}}List)
-	r.Post("/{{modelName}}/createOrUpdate", api.{{modelName|upperFirst}}CreateOrUpdate)
+	r.Post("/info", api.{{modelName|upperFirst}}Info)
+	r.Post("/delete", api.{{modelName|upperFirst}}Delete)
+	r.Post("/listByPage", api.{{modelName|upperFirst}}List)
+	r.Post("/createOrUpdate", api.{{modelName|upperFirst}}CreateOrUpdate)
 
 	return r
 }

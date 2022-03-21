@@ -8,6 +8,7 @@ import (
 	"github.com/cute-angelia/go-utils/utils/http/validation"
   "github.com/cute-angelia/go-utils/components/igorm"
 	"net/http"
+	"time"
 )
 
 // {{modelName|upperFirst}}Info 查询单条记录
@@ -91,8 +92,18 @@ func {{modelName|upperFirst}}CreateOrUpdate(w http.ResponseWriter, r *http.Reque
 		if user, _ := mysql.{{modelName|upperFirst}}Info(u.Id); user.Id > 0 {
 			// 更新
 			if err := mysql.{{modelName|upperFirst}}Update(u.Id, igorm.Ups{
-						{% for value in modelSchemas %}{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|camelString}}"),
-						{% endif %}{% endfor %}
+						{% for value in modelSchemas %}
+						{% if value.FieldName|snakeString != "update_at" %}
+						
+						{% if value.FieldName|snakeString == "create_at" %}
+"{{value.FieldName|snakeString}}":time.Now().Format("2006-01-02 15:04:05"),
+						{% else %}
+						{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|camelString}}"),
+						{% endif %}
+						{% endif %}
+
+						{% endif %}
+						{% endfor %}
 			}); err != nil {
 				api.Error(w, r, nil, "保存错误"+ err.Error(), -1)
 				return
@@ -108,7 +119,17 @@ func {{modelName|upperFirst}}CreateOrUpdate(w http.ResponseWriter, r *http.Reque
 	} else {
 		user := mysql.{{modelName|upperFirst}}{
 		 {% for value in modelSchemas %}
-      {{value.FieldName|camelString}}:api.Post(r, "{{value.FieldName|camelString}}"),
+		 {% if value.FieldName|snakeString != "create_at" %}
+		 {% if value.FieldType == "int32" %}
+      {{value.FieldName|camelString}}:api.PostInt32(r, "{{value.FieldName|camelString}}"),
+			{% else %}
+			{% if value.FieldName|snakeString != "update_at" %}
+      	{{value.FieldName|camelString}}:api.Post(r, "{{value.FieldName|camelString}}"),
+			{% else %}
+      	{{value.FieldName|camelString}}:time.Now().Format("2006-01-02 15:04:05"),
+			{% endif %}
+			{% endif %}
+			{% endif %}
       {% endfor %}
 		}
 		mysql.{{modelName|upperFirst}}Create(&user)
