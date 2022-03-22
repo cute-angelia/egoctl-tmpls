@@ -98,7 +98,7 @@ func {{modelName|upperFirst}}CreateOrUpdate(w http.ResponseWriter, r *http.Reque
 						{% if value.FieldName|snakeString == "create_at" %}
 "{{value.FieldName|snakeString}}":time.Now().Format("2006-01-02 15:04:05"),
 						{% else %}
-						{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|camelString}}"),
+						{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|snakeString}}"),
 						{% endif %}
 						{% endif %}
 
@@ -119,15 +119,14 @@ func {{modelName|upperFirst}}CreateOrUpdate(w http.ResponseWriter, r *http.Reque
 	} else {
 		user := mysql.{{modelName|upperFirst}}{
 		 {% for value in modelSchemas %}
-		 {% if value.FieldName|snakeString != "create_at" %}
+		 {% if value.FieldName|snakeString == "create_at" || value.FieldName|snakeString == "update_at" %}
+			{{value.FieldName|camelString}}:time.Now().Format("2006-01-02 15:04:05"),
+		 	{% else %}
+			
 		 {% if value.FieldType == "int32" %}
-      {{value.FieldName|camelString}}:api.PostInt32(r, "{{value.FieldName|camelString}}"),
+      {{value.FieldName|camelString}}:api.PostInt32(r, "{{value.FieldName|snakeString}}"),
 			{% else %}
-			{% if value.FieldName|snakeString != "update_at" %}
-      	{{value.FieldName|camelString}}:api.Post(r, "{{value.FieldName|camelString}}"),
-			{% else %}
-      	{{value.FieldName|camelString}}:time.Now().Format("2006-01-02 15:04:05"),
-			{% endif %}
+      	{{value.FieldName|camelString}}:api.Post(r, "{{value.FieldName|snakeString}}"),
 			{% endif %}
 			{% endif %}
       {% endfor %}
