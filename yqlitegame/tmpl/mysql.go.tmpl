@@ -175,7 +175,7 @@ func {{modelName|upperFirst}}ListPage( conds igorm.Conds, reqList *api.Paginatio
 
 	db = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...)
 	db.Count(&total)
-	db.Offset((reqList.Current - 1) * reqList.PageSize).Limit(reqList.PageSize).Find(&respList)
+	db.Order("{{modelSchemas|fieldsGetPrimaryKey|snakeString}} desc").Offset((reqList.Current - 1) * reqList.PageSize).Limit(reqList.PageSize).Find(&respList)
 	return
 }
 
