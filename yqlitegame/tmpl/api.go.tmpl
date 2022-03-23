@@ -93,9 +93,8 @@ func {{modelName|upperFirst}}CreateOrUpdate(w http.ResponseWriter, r *http.Reque
 			// 更新
 			if err := mysql.{{modelName|upperFirst}}Update(u.Id, igorm.Ups{
 						{% for value in modelSchemas %}
-						{% if value.FieldName|snakeString != "update_at" %}
-						
-						{% if value.FieldName|snakeString == "create_at" %}
+						{% if value.FieldName|snakeString != "create_at" %}
+						{% if value.FieldName|snakeString == "update_at" %}
 "{{value.FieldName|snakeString}}":time.Now().Format("2006-01-02 15:04:05"),
 						{% else %}
 						{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|snakeString}}"),

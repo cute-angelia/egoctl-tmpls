@@ -91,7 +91,7 @@ func {{modelName|upperFirst}}CreateOrUpdate(w http.ResponseWriter, r *http.Reque
 		if user, _ := mysql.{{modelName|upperFirst}}Info(u.Id); user.Id > 0 {
 			// 更新
 			if err := mysql.{{modelName|upperFirst}}Update(u.Id, igorm.Ups{
-						{% for value in modelSchemas %}{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|camelString}}"),
+						{% for value in modelSchemas %}{% if value.FieldName != modelPrimaryKey|lowerFirst || value.FieldName != "create_at" || value.FieldName != "update_at" %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|camelString}}"),
 						{% endif %}{% endfor %}
 			}); err != nil {
 				api.Error(w, r, nil, "保存错误"+ err.Error(), -1)
