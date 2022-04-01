@@ -1,11 +1,11 @@
 // @EgoctlOverwrite YES
 // @EgoctlGenerateTime {{generateTime}}
-package mysql
+package model
 
 import (
 	"github.com/cute-angelia/go-utils/components/igorm"
 	"github.com/cute-angelia/go-utils/utils/http/api"
-	"go-api-chess/project/demo/pkg/invoker"
+	"{{packagePath}}/pkg/invoker"
 	{% for value in packageImports %}"{{value}}"{% endfor %}
 )
 

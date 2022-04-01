@@ -11,10 +11,10 @@ renderPath = "tmpl"
     module = "main"
     srcName = "main.go.tmpl"
     dstPath = "{{pathBackend}}/.gitignore"
-[[descriptor]]
-    module = "api"
-    srcName = "api.go.tmpl"
-    dstPath = "{{pathBackend}}/pkg/router/api/{{modelNameSnake}}.go"
+# [[descriptor]]
+#     module = "api"
+#     srcName = "api.go.tmpl"
+#     dstPath = "{{pathBackend}}/pkg/router/api/{{modelNameSnake}}.go"
 # [[descriptor]]
 #     module = "mysql"
 #     srcName = "default_mysql.go.tmpl"
@@ -23,15 +23,15 @@ renderPath = "tmpl"
 [[descriptor]]
     module = "mysql"
     srcName = "mysql.go.tmpl"
-    dstPath = "{{pathBackend}}/pkg/model/mysql/{{modelNameSnake}}.go"
+    dstPath = "{{pathBackend}}/pkg/model/{{modelNameSnake}}.go"
 [[descriptor]]
     module = "router"
     srcName = "router_api.go.tmpl"
     dstPath = "{{pathBackend}}/pkg/router/{{modelNameSnake}}.go"
 [[descriptor]]
-    module = "router"
-    srcName = "router.go.tmpl"
-    dstPath = "{{pathBackend}}/pkg/router/router.go"
+    module = "serveHttp"
+    srcName = "serveHttp.go.tmpl"
+    dstPath = "{{pathBackend}}/pkg/router/serveHttp.go"
 [[descriptor]]
 module = "main"
 srcName = "main.go.tmpl"
@@ -40,10 +40,6 @@ dstPath = "{{pathBackend}}/main.go"
 module = "invoker"
 srcName = "invoker.go.tmpl"
 dstPath = "{{pathBackend}}/pkg/invoker/invoker.go"
-[[descriptor]]
-module = "invoker"
-srcName = "invoker_gochi.go.tmpl"
-dstPath = "{{pathBackend}}/pkg/invoker/gochi.go"
 [[descriptor]]
 module = "makefile"
 srcName = "makefile.tmpl"

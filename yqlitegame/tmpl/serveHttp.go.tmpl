@@ -1,26 +1,23 @@
-// @EgoctlOverwrite NO
+// @EgoctlOverwrite YES
 // @EgoctlGenerateTime {{generateTime}}
-package invoker
+package router
 
 import (
-	"embed"
-	"errors"
-	"github.com/go-chi/chi/v5"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
-	"go-api-chess/pkg/middleware"
-	"io"
+  "github.com/go-chi/chi/v5"
 	"log"
-	"mime"
 	"net/http"
+	"embed"
+	"time"
+	"errors"
+	"github.com/go-chi/cors"
+	"io"
+	"mime"
 	"path"
 	"path/filepath"
-	"time"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
-var ErrDir = errors.New("path is dir")
-
-func InitGoChi() *chi.Mux {
+func ServeHTTP(project string, port string, assets embed.FS) {
 	// router
 	r := chi.NewRouter()
 	r.Use(chiMiddleware.RequestID)
@@ -43,24 +40,25 @@ func InitGoChi() *chi.Mux {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
+	r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("ok"))
+	})
+
 	// 中间件
 	r.Route("/api", func(r chi.Router) {
 		// 接入 sign && jwt 校验
-		r.Use(
-			middleware.SignPass([]string{}, "e2f082d71b5fb9856dbdcddc7fae07b3"),
-			middleware.Jwt([]string{}, "d923lxll32920392093232323"),
-		)
+		// r.Use(
+			// middleware.SignPass([]string{}, "e2f082d71b5fb9856dbdcddc7fae07b3"),
+			// middleware.Jwt([]string{}, "d923lxll32920392093232323"),
+		// )
 
-		// r.Mount("/list", controller.List{}.Routes())
+    // project route
+    {% for value in modelNames %}
+    Init{{value}}(r)
+    {% endfor %}
 	})
 
-	// 赋值
-	Chier = r
-	return r
-}
-
-func InitAssets(assets embed.FS) {
-	Chier.NotFound(func(w http.ResponseWriter, r *http.Request) {
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		err := tryRead(assets, "vue/dist", r.URL.Path, w)
 		if err == nil {
 			return
@@ -68,8 +66,15 @@ func InitAssets(assets embed.FS) {
 		err = tryRead(assets, "vue/dist", "index.html", w)
 		if err != nil {
 			log.Println(err)
+			w.WriteHeader(404)
+			w.Write([]byte("404 not found"))
 		}
 	})
+
+	log.Println(project + "启动成功~ " + port)
+	if err := http.ListenAndServe(port, r); err != nil {
+		log.Println("启动错误：", err)
+	}
 }
 
 func tryRead(fs embed.FS, prefix, requestedPath string, w http.ResponseWriter) error {
@@ -82,7 +87,7 @@ func tryRead(fs embed.FS, prefix, requestedPath string, w http.ResponseWriter) e
 	// Goのfs.Openはディレクトリを読みこもとうしてもエラーにはならないがここでは邪魔なのでエラー扱いにする
 	stat, _ := f.Stat()
 	if stat.IsDir() {
-		return ErrDir
+		return errors.New("文件夹不存在")
 	}
 	contentType := mime.TypeByExtension(filepath.Ext(requestedPath))
 	w.Header().Set("Content-Type", contentType)

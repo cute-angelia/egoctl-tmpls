@@ -4,22 +4,177 @@ package router
 
 import (
 	"github.com/go-chi/chi/v5"
-	"{{packagePath}}/pkg/router/api"
+  "{{packagePath}}/pkg/model"
+	"github.com/cute-angelia/go-utils/utils/http/api"
+	"github.com/cute-angelia/go-utils/utils/http/validation"
+  "github.com/cute-angelia/go-utils/components/igorm"
+	"net/http"
+	"time"
 )
 
+type {{modelName|upperFirst}} struct{}
+
 // {{apiPrefix}}
-func Init{{modelName|upperFirst}}(r *chi.Mux) {
-	r.Mount("/{{modelName}}", {{modelName}}Router())
+func Init{{modelName|upperFirst}}(r chi.Router) {
+	r.Mount("/{{modelName}}", {{modelName|upperFirst}}{}.Router())
 }
 
-func {{modelName}}Router() chi.Router {
+func (rs {{modelName|upperFirst}}) Router() chi.Router {
 	r := chi.NewRouter()
 	// 中间件
 	// r.Use(AdminOnly)
-	r.Post("/info", api.{{modelName|upperFirst}}Info)
-	r.Post("/delete", api.{{modelName|upperFirst}}Delete)
-	r.Post("/listByPage", api.{{modelName|upperFirst}}List)
-	r.Post("/createOrUpdate", api.{{modelName|upperFirst}}CreateOrUpdate)
+	r.Post("/info", rs.{{modelName|upperFirst}}Info)
+	r.Post("/delete", rs.{{modelName|upperFirst}}Delete)
+	r.Post("/listByPage", rs.{{modelName|upperFirst}}List)
+	r.Post("/createOrUpdate", rs.{{modelName|upperFirst}}CreateOrUpdate)
 
 	return r
+}
+
+
+// {{modelName|upperFirst}}Info 查询单条记录
+func (rs {{modelName|upperFirst}}) {{modelName|upperFirst}}Info(w http.ResponseWriter, r *http.Request) {
+	// 校验参数
+	valid := validation.Validation{}
+
+	u := struct {
+		Id int32 `valid:"Required;"`
+	}{
+		Id: api.PostInt32(r, "{{modelSchemas|fieldsGetPrimaryKey|lowerFirst}}"),
+	}
+	if err := valid.Submit(u); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+		return
+	}
+	info, _ := model.{{modelName|upperFirst}}Info(u.Id)
+	api.Success(w, r, info, "获取成功！")
+	return
+}
+
+// {{modelName|upperFirst}}List 查询多条带分页记录
+func (rs {{modelName|upperFirst}}) {{modelName|upperFirst}}List(w http.ResponseWriter, r *http.Request) {
+	// 校验参数
+	valid := validation.Validation{}
+
+	u := struct {
+		Current  int `json:"current"`
+		PageSize int `json:"pageSize"`
+		Id       int32
+	}{
+		Current:  api.PostInt(r, "current"),
+		PageSize: api.PostInt(r, "pageSize"),
+		Id:       api.PostInt32(r, "id"),
+	}
+	if err := valid.Submit(u); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+		return
+	}
+
+	if u.PageSize <= 0 {
+		u.PageSize = 10
+	}
+
+	req := &api.Pagination{
+		Current:  u.Current,
+		PageSize: u.PageSize,
+	}
+
+	query := igorm.Conds{}
+    {% for value in modelSchemas %}if v := api.Post(r,"{{value.FieldName|snakeString|lowerFirst}}"); v != "" {
+        query["{{value.FieldName|snakeString|lowerFirst}}"] = v
+    }
+    {% endfor %}
+
+	total, list := model.{{modelName|upperFirst}}ListPage(query, req)
+	api.SuccessWithPage(w, r, list, "success", api.Pagination{
+		Current:  u.Current,
+		PageSize: u.PageSize,
+		Total:    total,
+	})
+	return
+}
+
+// {{modelName|upperFirst}}CreateOrUpdate 创建记录
+func (rs {{modelName|upperFirst}}) {{modelName|upperFirst}}CreateOrUpdate(w http.ResponseWriter, r *http.Request) {
+	// 校验参数
+	valid := validation.Validation{}
+
+	u := struct {
+		Id       int32   
+	}{
+		Id:       api.PostInt32(r, "id"),
+	}
+	if err := valid.Submit(u); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+		return
+	}
+
+	if u.Id > 0 {
+		if user, _ := model.{{modelName|upperFirst}}Info(u.Id); user.Id > 0 {
+			// 更新
+			if err := model.{{modelName|upperFirst}}Update(u.Id, igorm.Ups{
+						{% for value in modelSchemas %}
+						{% if value.FieldName|snakeString != "create_at" %}
+						{% if value.FieldName|snakeString == "update_at" %}
+"{{value.FieldName|snakeString}}":time.Now().Format("2006-01-02 15:04:05"),
+						{% else %}
+						{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|snakeString}}"),
+						{% endif %}
+						{% endif %}
+
+						{% endif %}
+						{% endfor %}
+			}); err != nil {
+				api.Error(w, r, nil, "保存错误"+ err.Error(), -1)
+				return
+			} else {
+				userResp, _ := model.{{modelName|upperFirst}}Info(u.Id)
+				api.Success(w, r, userResp, "success")
+				return
+			}
+		} else {
+			api.Error(w, r, nil, "数据不存在", -1)
+			return
+		}
+	} else {
+		user := model.{{modelName|upperFirst}}{
+		 {% for value in modelSchemas %}
+		 {% if value.FieldName|snakeString == "create_at" || value.FieldName|snakeString == "update_at" %}
+			{{value.FieldName|camelString}}:time.Now().Format("2006-01-02 15:04:05"),
+		 	{% else %}
+			
+		 {% if value.FieldType == "int32" %}
+      {{value.FieldName|camelString}}:api.PostInt32(r, "{{value.FieldName|snakeString}}"),
+			{% else %}
+      	{{value.FieldName|camelString}}:api.Post(r, "{{value.FieldName|snakeString}}"),
+			{% endif %}
+			{% endif %}
+      {% endfor %}
+		}
+		model.{{modelName|upperFirst}}Create(&user)
+		api.Success(w, r, user, "success")
+		return
+	}
+}
+
+// {{modelName|upperFirst}}Delete 删除指定记录
+func (rs {{modelName|upperFirst}}) {{modelName|upperFirst}}Delete(w http.ResponseWriter, r *http.Request) {
+		// 校验参数
+	valid := validation.Validation{}
+
+	u := struct {
+		Id int32 `valid:"Required;"`
+	}{
+		Id: api.PostInt32(r, "{{modelSchemas|fieldsGetPrimaryKey|lowerFirst}}"),
+	}
+	if err := valid.Submit(u); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+		return
+	}
+	if err := model.{{modelName|upperFirst}}Delete(u.Id); err != nil {
+		api.Error(w, r, nil, err.Error(), -1)
+	} else {
+		api.Success(w, r, nil, "获取成功！")
+	}
+	return
 }

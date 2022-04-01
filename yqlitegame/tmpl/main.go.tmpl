@@ -3,32 +3,30 @@
 package main
 
 import (
-	///"embed"
+	"embed"
 	"github.com/cute-angelia/go-utils/utils/conf"
-	"{{packagePath}}/config"
+	// "{{packagePath}}/config"
 	"{{packagePath}}/pkg/invoker"
 	"{{packagePath}}/pkg/router"
-	"log"
+  "log"
 )
 
 ///go:embed vue/dist/*
 var assets embed.FS
 
-const PROJECT_NAME = "yq-demo"
-const PORT_SITE = ":9305"
+const projectName = "yq-demo"
+const portSite = ":9305"
 
 func main() {
 	// config
-	config.InitConfig()
+	//config.InitConfig()
 	if err := conf.MergeConfigWithPath("./"); err != nil {
-		log.Println(err)
+		log.Println("日志加载失败", err)
 	}
 
 	// invoker
 	invoker.InitCommon()
-	// go-chi
-	invoker.InitGoChi()
-	/// invoker.InitAssets(assets)
 
-	router.ServeHTTP(PROJECT_NAME, PORT_SITE)
+	// ServeHTTP
+	router.ServeHTTP(projectName, portSite, assets)
 }
