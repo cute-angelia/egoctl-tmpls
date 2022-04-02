@@ -14,7 +14,7 @@ import (
 ///go:embed vue/dist/*
 var assets embed.FS
 
-const projectName = "yq-demo"
+const projectName = "{{packagePath}}"
 const portSite = ":9305"
 
 func main() {
