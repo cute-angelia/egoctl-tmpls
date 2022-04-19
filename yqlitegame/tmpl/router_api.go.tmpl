@@ -59,11 +59,25 @@ func (rs {{modelName|upperFirst}}) {{modelName|upperFirst}}List(w http.ResponseW
 	u := struct {
 		Current  int `json:"current"`
 		PageSize int `json:"pageSize"`
-		Id       int32
+		{% for value in modelSchemas %}
+			{% if value.FieldName|snakeString != "create_at" && value.FieldName|snakeString != "update_at" %}
+				{% if value.FieldType == "int32" %}
+					{{value.FieldName|camelString}} int32 `json:"{{value.FieldName|snakeString}}"`
+				{% else %}
+					{{value.FieldName|camelString}} string `json:"{{value.FieldName|snakeString}}"`
+				{% endif %}
+			{% endif %}
+    {% endfor %}
 	}{
 		Current:  api.PostInt(r, "current"),
 		PageSize: api.PostInt(r, "pageSize"),
-		Id:       api.PostInt32(r, "id"),
+		 {% for value in modelSchemas %}
+		 {% if value.FieldType == "int32" %}
+      {{value.FieldName|camelString}}:api.PostInt32(r, "{{value.FieldName|snakeString}}"),
+			{% else %}
+      	{{value.FieldName|camelString}}:api.Post(r, "{{value.FieldName|snakeString}}"),
+			{% endif %}
+			 {% endfor %}
 	}
 	if err := valid.Submit(u); err != nil {
 		api.Error(w, r, nil, err.Error(), -1)
@@ -100,9 +114,21 @@ func (rs {{modelName|upperFirst}}) {{modelName|upperFirst}}CreateOrUpdate(w http
 	valid := validation.Validation{}
 
 	u := struct {
-		Id       int32   
+    {% for value in modelSchemas %}
+			{% if value.FieldName|snakeString != "create_at" && value.FieldName|snakeString != "update_at" %}
+				{% if value.FieldType == "int32" %}{{value.FieldName|camelString}} int32 `json:"{{value.FieldName|snakeString}}"`
+				{% else %}{{value.FieldName|camelString}} string `json:"{{value.FieldName|snakeString}}"`
+				{% endif %}
+			{% endif %}
+		{% endfor %}
 	}{
-		Id:       api.PostInt32(r, "id"),
+		{% for value in modelSchemas %}
+			{% if value.FieldType == "int32" %}
+      	{{value.FieldName|camelString}}:api.PostInt32(r, "{{value.FieldName|snakeString}}"),
+			{% else %}
+      	{{value.FieldName|camelString}}:api.Post(r, "{{value.FieldName|snakeString}}"),
+			{% endif %}
+		{% endfor %}
 	}
 	if err := valid.Submit(u); err != nil {
 		api.Error(w, r, nil, err.Error(), -1)
@@ -118,10 +144,9 @@ func (rs {{modelName|upperFirst}}) {{modelName|upperFirst}}CreateOrUpdate(w http
 						{% if value.FieldName|snakeString == "update_at" %}
 "{{value.FieldName|snakeString}}":time.Now().Format("2006-01-02 15:04:05"),
 						{% else %}
-						{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":api.Post(r, "{{value.FieldName|snakeString}}"),
+						{% if value.FieldName != modelPrimaryKey|lowerFirst %}"{{value.FieldName|snakeString}}":u.{{value.FieldName|camelString}},
 						{% endif %}
 						{% endif %}
-
 						{% endif %}
 						{% endfor %}
 			}); err != nil {
@@ -142,12 +167,7 @@ func (rs {{modelName|upperFirst}}) {{modelName|upperFirst}}CreateOrUpdate(w http
 		 {% if value.FieldName|snakeString == "create_at" || value.FieldName|snakeString == "update_at" %}
 			{{value.FieldName|camelString}}:time.Now().Format("2006-01-02 15:04:05"),
 		 	{% else %}
-			
-		 {% if value.FieldType == "int32" %}
-      {{value.FieldName|camelString}}:api.PostInt32(r, "{{value.FieldName|snakeString}}"),
-			{% else %}
-      	{{value.FieldName|camelString}}:api.Post(r, "{{value.FieldName|snakeString}}"),
-			{% endif %}
+			{{value.FieldName|camelString}}:u.{{value.FieldName|camelString}},
 			{% endif %}
       {% endfor %}
 		}
