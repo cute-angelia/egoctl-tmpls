@@ -5,8 +5,8 @@ package mysql
 import (
 	"gorm.io/gorm"
 	"go.uber.org/zap"
-	"{{packagePath}}/pkg/invoker"
-	"{{packagePath}}/pkg/router/core"
+	"{{packagePath}}/internal/invoker"
+	"{{packagePath}}/internal/router/core"
 	{% for value in packageImports %}"{{value}}"{% endfor %}
 )
 

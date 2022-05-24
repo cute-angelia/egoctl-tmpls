@@ -14,28 +14,28 @@ renderPath = "tmpl"
 [[descriptor]]
     module = "api"
     srcName = "api.go.tmpl"
-    dstPath = "{{pathBackend}}/pkg/router/api/{{modelNameSnake}}.go"
+    dstPath = "{{pathBackend}}/internal/router/api/{{modelNameSnake}}.go"
 [[descriptor]]
     module = "mysql"
     srcName = "default_mysql.go.tmpl"
-    dstPath = "{{pathBackend}}/pkg/model/mysql/default.go"
+    dstPath = "{{pathBackend}}/internal/model/mysql/default.go"
     once = true
 [[descriptor]]
     module = "mysql"
     srcName = "mysql.go.tmpl"
-    dstPath = "{{pathBackend}}/pkg/model/mysql/{{modelNameSnake}}.go"
+    dstPath = "{{pathBackend}}/internal/model/mysql/{{modelNameSnake}}.go"
 [[descriptor]]
     module = "dto"
     srcName = "dto.go.tmpl"
-    dstPath = "{{pathBackend}}/pkg/model/dto/{{modelNameSnake}}.go"
+    dstPath = "{{pathBackend}}/internal/model/dto/{{modelNameSnake}}.go"
 [[descriptor]]
     module = "router"
     srcName = "router_api.go.tmpl"
-    dstPath = "{{pathBackend}}/pkg/router/{{modelNameSnake}}.go"
+    dstPath = "{{pathBackend}}/internal/router/{{modelNameSnake}}.go"
 [[descriptor]]
     module = "router"
     srcName = "router.go.tmpl"
-    dstPath = "{{pathBackend}}/pkg/router/router.go"
+    dstPath = "{{pathBackend}}/internal/router/router.go"
 [[descriptor]]
 module = "main"
 srcName = "main.go.tmpl"
@@ -43,8 +43,8 @@ dstPath = "{{pathBackend}}/main.go"
 [[descriptor]]
 module = "invoker"
 srcName = "invoker.go.tmpl"
-dstPath = "{{pathBackend}}/pkg/invoker/invoker.go"
+dstPath = "{{pathBackend}}/internal/invoker/invoker.go"
 [[descriptor]]
 module = "core"
 srcName = "core.go.tmpl"
-dstPath = "{{pathBackend}}/pkg/router/core/core.go"
+dstPath = "{{pathBackend}}/internal/router/core/core.go"
