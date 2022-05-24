@@ -16,6 +16,10 @@ var (
 	Chier  *chi.Mux
 )
 
+const (
+	GormDbNameMonitor = "yq_monitor" 
+)
+
 func InitCommon() error {
 	// 日志
 	Logger = loggerV3.Load("components.loggerV3").NewLogger()
@@ -25,8 +29,8 @@ func InitCommon() error {
 
 	// db
 	igorm.New(
-		igorm.WithDbName("company_ues"),
-		igorm.WithDsn(viper.GetString("db.company_ues")),
+		igorm.WithDbName(GormDbNameMonitor),
+		igorm.WithDsn(viper.GetString("db." + GormDbNameMonitor)),
 		igorm.WithMaxIdleConns(1),
 		igorm.WithMaxOpenConnss(2),
 		igorm.WithLoggerWriter(Logger),

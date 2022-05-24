@@ -9,7 +9,7 @@ import (
 	{% for value in packageImports %}"{{value}}"{% endfor %}
 )
 
-const {{modelName}}DbName = "company_ues"
+const {{modelName}}DbName = invoker.GormDbNameXxx
 
 type {{modelName|upperFirst}} struct {
 	{% for value in modelSchemas %}
