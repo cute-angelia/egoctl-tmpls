@@ -1,11 +1,11 @@
 // @EgoctlOverwrite YES
 // @EgoctlGenerateTime {{generateTime}}
-package mysql
+package model
 
 import (
 	"github.com/cute-angelia/go-utils/components/igorm"
 	"github.com/cute-angelia/go-utils/utils/http/api"
-	"go-api-chess/project/demo/internal/invoker"
+	"{{packagePath}}/internal/invoker"
 	{% for value in packageImports %}"{{value}}"{% endfor %}
 )
 
@@ -127,16 +127,16 @@ func {{modelName|upperFirst}}InfoX( conds igorm.Conds) (resp {{modelName|upperFi
 	return
 }
 
-// {{modelName|upperFirst}}List 查询list，extra[0]为sorts
+// {{modelName|upperFirst}}List 查询list，extra[0]为order
 func {{modelName|upperFirst}}List(conds igorm.Conds, extra ...string) (resp []*{{modelName|upperFirst}}, err error) {
 	db, _ := igorm.GetGormMysql({{modelName}}DbName)
   {% if fieldDtimeExist %}conds["dtime"] = 0{% endif %}
 	sql, binds := igorm.BuildQuery(conds)
-	sorts := ""
+	order := ""
 	if len(extra) >= 1 {
-		sorts = extra[0]
+		order = extra[0]
 	}
-	if err = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...).Order(sorts).Find(&resp).Error; err != nil {
+	if err = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...).Order(order).Find(&resp).Error; err != nil {
 		invoker.Logger.Error().Str("List error", "{{modelName|snakeString}}").Err(err)
 		return
 	}
@@ -161,7 +161,7 @@ func {{modelName|upperFirst}}ListMap(conds igorm.Conds) (resp map[int32]*{{model
 }
 
 // {{modelName|upperFirst}}ListPage 根据分页条件查询list
-func {{modelName|upperFirst}}ListPage( conds igorm.Conds, reqList *api.Pagination) (total int64, respList {{modelName|upperFirst}}s) {
+func {{modelName|upperFirst}}ListPage( conds igorm.Conds, reqList *api.Pagination, extra ...string) (total int64, respList {{modelName|upperFirst}}s) {
 	db, _ := igorm.GetGormMysql({{modelName}}DbName)
   respList = make({{modelName|upperFirst}}s,0)
   {% if fieldDtimeExist %}conds["dtime"] = 0{% endif %}
@@ -173,9 +173,14 @@ func {{modelName|upperFirst}}ListPage( conds igorm.Conds, reqList *api.Paginatio
 	}
 	sql, binds := igorm.BuildQuery(conds)
 
+  order := "{{modelSchemas|fieldsGetPrimaryKey|snakeString}} desc"
+	if len(extra) >= 1 {
+		order = extra[0]
+	}
+
 	db = db.Model({{modelName|upperFirst}}{}).Where(sql, binds...)
 	db.Count(&total)
-	db.Order("{{modelSchemas|fieldsGetPrimaryKey|snakeString}} desc").Offset((reqList.Current - 1) * reqList.PageSize).Limit(reqList.PageSize).Find(&respList)
+	db.Order(order).Offset((reqList.Current - 1) * reqList.PageSize).Limit(reqList.PageSize).Find(&respList)
 	return
 }
 
